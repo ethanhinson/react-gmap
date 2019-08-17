@@ -4,7 +4,7 @@ import React, {
 } from 'react';
 import PropTypes from 'prop-types';
 
-const initialState = { map: null };
+const initialState = { map: null, markers: [] };
 
 const GmapDispatchContext = createContext();
 const GmapStateContext = createContext(initialState);
@@ -23,6 +23,14 @@ const reducer = (state, action) => {
         ...state,
         map: value,
       };
+    case 'SET_MARKERS': {
+      return {
+        ...state,
+        markers: {
+          ...value,
+        },
+      };
+    }
     default:
       return state;
   }
@@ -53,6 +61,7 @@ GmapProvider.propTypes = {
   defaultState: PropTypes.shape({
     // @todo: gmap?
     map: PropTypes.shape({}),
+    markers: PropTypes.arrayOf(PropTypes.shape({})),
   }),
 };
 

@@ -6,7 +6,7 @@ Provide a component, state management, and effect for rendering a list of marker
 
 - [x] Create a basic map component that accepts props
 - [x] Provide a state reducer and context so the implementors can access the `google.maps.map` object.
-- [ ] Accept a list of markers
+- [x] Accept a list of markers
 - [ ] Use state reducer to diff/manage intelligent marker management
 - [ ] `useEffect` for autozooming on marker update/load
 - [ ] Implement `MarkerClusterer`

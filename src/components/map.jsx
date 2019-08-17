@@ -1,7 +1,9 @@
+/* global window */
 import React, { useEffect, useRef, memo } from 'react';
 import PropTypes from 'prop-types';
 import { isEqual, omit, functions } from 'lodash';
-import { useGmapDispatch } from '../context/provider';
+import { useGmap } from '../context/provider';
+import { fitBoundsSideEffect, makeMarker } from '../lib';
 
 /**
  * Provide a helper function for determining if the props
@@ -20,13 +22,21 @@ const mapWillUpdate = (prevProps, nextProps) => {
 
 const Map = ({ options, className, apiKey }) => {
   const mapRef = { ref: useRef(), className };
-  const gmapDispatch = useGmapDispatch();
+  const [gmapState, gmapDispatch] = useGmap();
+  const { map, markers } = gmapState;
+
+  // Invoked as a side effect on (presumably) the first load,
   const onMapsAPILoad = () => {
-    const map = new window.google.maps.Map(mapRef.ref.current, options);
-    return gmapDispatch({
+    const mapObj = new window.google.maps.Map(mapRef.ref.current, options);
+    gmapDispatch({
       type: 'SET_MAP',
-      value: map,
+      value: mapObj,
     });
+  };
+
+  // Invoke side effects for map updates here.
+  const handleMapUpdates = () => {
+    fitBoundsSideEffect(map, markers.map(m => makeMarker(map, m)));
   };
 
   useEffect(() => {
@@ -38,7 +48,7 @@ const Map = ({ options, className, apiKey }) => {
       headScript.parentNode.insertBefore(script, headScript);
       script.addEventListener('load', onMapsAPILoad);
       return () => script.removeEventListener('load', onMapsAPILoad);
-    } return onMapsAPILoad();
+    } handleMapUpdates(); return undefined;
   });
 
   return (
