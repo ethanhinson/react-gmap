@@ -1,0 +1,22 @@
+{
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "parser": "babel-eslint",
+  "plugins": [
+    "react-hooks"
+  ],
+  "rules": {
+    "camelcase": "off",
+    "jsx-a11y/label-has-associated-control": [
+      "error",
+      {// Workaround, Airbnb requires for & nesting
+        "labelComponents": ["label"]
+      }
+    ],
+    "jsx-a11y/label-has-for": "off",// Deprecated,
+    "react/jsx-one-expression-per-line": ["warn", {"allow": "single-child"}]
+  },
+  "extends": "airbnb"
+}
