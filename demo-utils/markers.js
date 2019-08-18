@@ -7,7 +7,7 @@ import faker from 'faker';
  * @param amount
  * @returns {{id: *, title: *, coords: {lat: number, lng: number}}[]}
  */
-const makeFakerMarkers = (amount = 5000) => [...Array(amount).keys()].map(() => ({
+const makeFakerMarkers = (amount = 50) => [...Array(amount).keys()].map(() => ({
   id: faker.random.uuid(),
   title: faker.random.word(),
   coords: {
