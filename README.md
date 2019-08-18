@@ -9,7 +9,7 @@ Provide a component, state management, and effect for rendering a list of marker
 - [x] Accept a list of markers
 - [x] `useEffect` for autozooming on marker update/load
 - [x] Memoize marker creation.
-- [ ] Implement `InfoWindow`
+- [x] Implement `InfoWindow`
 - [ ] Implement `MarkerClusterer`
 
 ## Usage
