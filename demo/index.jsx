@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import ReactDOM from 'react-dom';
-import makeFakeMarkers from '../demo-utils/markers';
+import { makeFakerMarkers } from '../demo-utils/markers';
 
 import Map from '../src/components/map';
 import GmapProvider, { useGmapDispatch } from '../src/context/provider';
@@ -20,7 +20,7 @@ const GenerateMarkers = () => {
       onClick={() => {
         gmapDispatch({
           type: 'SET_MARKERS',
-          value: makeFakeMarkers(),
+          value: makeFakerMarkers(),
         });
       }}
     >
@@ -32,7 +32,7 @@ const GenerateMarkers = () => {
 const e = document.getElementById('gmap');
 ReactDOM.render(
   <GmapProvider defaultState={{
-    markers: makeFakeMarkers(),
+    markers: makeFakerMarkers(),
   }}
   >
     <GenerateMarkers />

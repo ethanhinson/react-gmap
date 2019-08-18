@@ -1,27 +1,49 @@
-/* global window */
+/* global window, document */
+import React from 'react';
+import { render } from 'react-dom';
 import { memoize } from 'lodash';
+
+/**
+ * Handle open infowindows.
+ * @param id
+ * @param coords
+ * @param props
+ * @param Component
+ */
+let lastInfoWindow;
+const makeInfoWindow = (e, map, props, Component) => {
+  const { id } = props;
+  const { latLng } = e;
+  const infoWindow = new window.google.maps.InfoWindow({
+    content: `<div id="infowindow-${id}" />`,
+    position: { lat: latLng.lat(), lng: latLng.lng() },
+  });
+  infoWindow.addListener('domready', () => {
+    render(
+      <Component {...props} />,
+      document.getElementById(`infowindow-${id}`),
+    );
+  });
+  if (lastInfoWindow) lastInfoWindow.close();
+  lastInfoWindow = infoWindow;
+  infoWindow.open(map);
+};
 
 /**
  * Provide a function to create a marker object.
  * @param map
- * @param id
- * @param title
- * @param coords
  * @param data
- * @param onClick
  * @returns {window.google.maps.Marker}
  */
-const makeMarker = memoize((map, {
-  id, title, coords, data, onClick,
-}) => {
+const makeMarker = memoize((map, data) => {
+  const {
+    title, coords, onClick,
+  } = data;
   const marker = new window.google.maps.Marker({
     position: coords,
     map,
     title,
-    rawData: {
-      id,
-      data,
-    },
+    data,
   });
   marker.addListener('click', e => (onClick ? onClick(e, map, data) : null));
   return marker;
@@ -44,4 +66,5 @@ export {
   arrayDiff,
   noop,
   makeMarker,
+  makeInfoWindow,
 };
