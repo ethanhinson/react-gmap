@@ -26,9 +26,9 @@ const reducer = (state, action) => {
     case 'SET_MARKERS': {
       return {
         ...state,
-        markers: {
+        markers: [
           ...value,
-        },
+        ],
       };
     }
     default:
@@ -57,7 +57,7 @@ const GmapProvider = ({
 };
 
 GmapProvider.propTypes = {
-  children: PropTypes.shape({}).isRequired,
+  children: PropTypes.node.isRequired,
   defaultState: PropTypes.shape({
     // @todo: gmap?
     map: PropTypes.shape({}),

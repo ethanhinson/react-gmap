@@ -3,7 +3,7 @@ import React, { useEffect, useRef, memo } from 'react';
 import PropTypes from 'prop-types';
 import { isEqual, omit, functions } from 'lodash';
 import { useGmap } from '../context/provider';
-import { fitBoundsSideEffect, makeMarker } from '../lib';
+import { arrayDiff, noop, makeMarker } from '../lib';
 
 /**
  * Provide a helper function for determining if the props
@@ -20,12 +20,56 @@ const mapWillUpdate = (prevProps, nextProps) => {
   );
 };
 
+/**
+ * This is a static cache of the marker IDs
+ * that are present on the map. We use
+ * this list to determine which markers
+ * to remove as a side effect.
+ */
+const markerStaticCache = {};
+
+/**
+ * Perform a difference check on the set
+ * of ids. Turn off any missing markers
+ * and return the new set to be
+ * used.
+ * @param map
+ * @param visibleIds
+ */
+const handleMarkersSideEffect = (map, visibleIds) => {
+  const markersToHide = arrayDiff(Object.keys(markerStaticCache), visibleIds);
+  markersToHide
+  // For the marker Ids that are missing, we setMap to null, otherwise noop
+    .forEach(id => (markerStaticCache[id] ? markerStaticCache[id].setMap(null) : noop));
+};
+
+
+/**
+ * Fit bounds on the map object based on the markers.
+ * @param map
+ * @param markers
+ */
+const fitBoundsSideEffect = (map, markers) => {
+  if (markers.length) {
+    const bounds = new window.google.maps.LatLngBounds();
+    markers.forEach(m => (m.getMap() ? bounds.extend(m.getPosition()) : noop));
+    window.google.maps.event.trigger(map, 'resize');
+    map.fitBounds(bounds);
+  }
+};
+
+
 const Map = ({ options, className, apiKey }) => {
   const mapRef = { ref: useRef(), className };
   const [gmapState, gmapDispatch] = useGmap();
   const { map, markers } = gmapState;
 
-  // Invoked as a side effect on (presumably) the first load,
+  /**
+   * useEffect callback.
+   *
+   * This should only be invoked on the
+   * first load of the component.
+   */
   const onMapsAPILoad = () => {
     const mapObj = new window.google.maps.Map(mapRef.ref.current, options);
     gmapDispatch({
@@ -34,9 +78,33 @@ const Map = ({ options, className, apiKey }) => {
     });
   };
 
-  // Invoke side effects for map updates here.
+  /**
+   * useEffect callback.
+   *
+   * This should be invoked on state updates. It handles
+   * calculating which markers should be hidden
+   * on the map. Since GoogleMaps has only
+   * an imperative API, we have to "remember"
+   * which markers were visible and which
+   * are not.
+   *
+   * The style is a little old school.
+   * But precision, and performance are
+   * important here.
+   */
   const handleMapUpdates = () => {
-    fitBoundsSideEffect(map, markers.map(m => makeMarker(map, m)));
+    const visibleMapIds = [];
+    const visibleMapMarkers = [];
+    markers.forEach((m) => {
+      const { id } = m;
+      visibleMapIds.push(id);
+      if (!markerStaticCache[id]) {
+        markerStaticCache[id] = makeMarker(map, m);
+      }
+      visibleMapMarkers.push(markerStaticCache[id]);
+    });
+    handleMarkersSideEffect(map, visibleMapIds);
+    fitBoundsSideEffect(map, visibleMapMarkers);
   };
 
   useEffect(() => {

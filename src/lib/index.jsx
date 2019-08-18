@@ -2,20 +2,6 @@
 import { memoize } from 'lodash';
 
 /**
- * Fit bounds on the map object based on the markers.
- * @param map
- * @param markers
- */
-const fitBoundsSideEffect = (map, markers) => {
-  if (markers.length) {
-    const bounds = new window.google.maps.LatLngBounds();
-    markers.forEach(m => bounds.extend(m.getPosition()));
-    window.google.maps.event.trigger(map, 'resize');
-    map.fitBounds(bounds);
-  }
-};
-
-/**
  * Provide a function to create a marker object.
  * @param map
  * @param id
@@ -41,7 +27,21 @@ const makeMarker = memoize((map, {
   return marker;
 }, (map, { ...args }) => JSON.stringify(args));
 
+/**
+ * Get the difference between 2 arrays.
+ * @param a
+ * @param b
+ * @returns {*}
+ */
+const arrayDiff = (a, b) => a.filter(i => b.indexOf(i) < 0);
+
+/**
+ * Generic noop function.
+ */
+const noop = () => {};
+
 export {
-  fitBoundsSideEffect,
+  arrayDiff,
+  noop,
   makeMarker,
 };
