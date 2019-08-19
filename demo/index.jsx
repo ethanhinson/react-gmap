@@ -36,6 +36,13 @@ ReactDOM.render(
   }}
   >
     <GenerateMarkers />
-    <Map apiKey={mapsApiKey} className="map" />
+    <Map
+      clusterOptions={{
+        gridSize: 25,
+        maxZoom: 17,
+      }}
+      apiKey={mapsApiKey}
+      className="map"
+    />
   </GmapProvider>, e,
 );

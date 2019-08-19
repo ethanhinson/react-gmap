@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, memo } from 'react';
 import PropTypes from 'prop-types';
 import { isEqual, omit, functions } from 'lodash';
+import MarkerClusterer from '@google/markerclustererplus';
 import { useGmap } from '../context/provider';
 import { arrayDiff, noop, makeMarker } from '../lib';
 
@@ -58,11 +59,12 @@ const fitBoundsSideEffect = (map, markers) => {
   }
 };
 
-
-const Map = ({ options, className, apiKey }) => {
+const Map = ({
+  options, className, apiKey, clusterOptions,
+}) => {
   const mapRef = { ref: useRef(), className };
   const [gmapState, gmapDispatch] = useGmap();
-  const { map, markers } = gmapState;
+  const { map, markers, cluster } = gmapState;
 
   /**
    * useEffect callback.
@@ -103,6 +105,12 @@ const Map = ({ options, className, apiKey }) => {
       }
       visibleMapMarkers.push(markerStaticCache[id]);
     });
+    if (clusterOptions && !cluster) {
+      gmapDispatch({
+        type: 'SET_CLUSTER',
+        value: new MarkerClusterer(map, visibleMapMarkers, clusterOptions),
+      });
+    }
     handleMarkersSideEffect(map, visibleMapIds);
     fitBoundsSideEffect(map, visibleMapMarkers);
   };
@@ -130,9 +138,11 @@ Map.propTypes = {
   options: PropTypes.shape({}),
   apiKey: PropTypes.string.isRequired,
   className: PropTypes.string.isRequired,
+  clusterOptions: PropTypes.shape({}),
 };
 
 Map.defaultProps = {
+  clusterOptions: undefined,
   options: {
     center: { lat: 48, lng: 8 },
     zoom: 5,

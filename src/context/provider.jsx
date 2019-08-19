@@ -31,6 +31,12 @@ const reducer = (state, action) => {
         ],
       };
     }
+    case 'SET_CLUSTER': {
+      return {
+        ...state,
+        cluster: value,
+      };
+    }
     default:
       return state;
   }
