@@ -45,7 +45,6 @@ const Map = ({
    * of ids. Turn off any missing markers
    * and return the new set to be
    * used.
-   * @param map
    * @param visibleIds
    */
   const handleMarkersSideEffect = (visibleIds) => {
@@ -57,8 +56,7 @@ const Map = ({
 
   /**
    * Fit bounds on the map object based on the markers.
-   * @param map
-   * @param markers
+   * @param newMarkers
    */
   const fitBoundsSideEffect = (newMarkers) => {
     if (newMarkers.length) {
