@@ -4,15 +4,13 @@
  */
 import React from 'react';
 import ReactDOM from 'react-dom';
+import PropTypes from 'prop-types';
 import { makeFakerMarkers } from '../demo-utils/markers';
 
 import Map from '../src/components/map';
 import GmapProvider, { useGmapDispatch } from '../src/context/provider';
-import config from '../keys';
 
-const { mapsApiKey } = config;
-
-const GenerateMarkers = () => {
+const GenerateMarkers = ({ mapId }) => {
   const gmapDispatch = useGmapDispatch();
   return (
     <button
@@ -20,29 +18,53 @@ const GenerateMarkers = () => {
       onClick={() => {
         gmapDispatch({
           type: 'SET_MARKERS',
+          id: mapId,
           value: makeFakerMarkers(),
         });
       }}
     >
-      Update Marker State
+      {`Update marker state for: ${mapId}`}
     </button>
   );
+};
+
+GenerateMarkers.propTypes = {
+  mapId: PropTypes.string.isRequired,
 };
 
 const e = document.getElementById('gmap');
 ReactDOM.render(
   <GmapProvider defaultState={{
-    markers: makeFakerMarkers(),
+    gmap1: {
+      markers: makeFakerMarkers(),
+    },
   }}
   >
-    <GenerateMarkers />
+    <GenerateMarkers mapId="gmap1" />
     <Map
       clusterOptions={{
         gridSize: 25,
         maxZoom: 17,
       }}
-      apiKey={mapsApiKey}
+      mapId="gmap1"
       className="map"
     />
   </GmapProvider>, e,
+);
+
+
+const e2 = document.getElementById('gmap2');
+ReactDOM.render(
+  <GmapProvider defaultState={{
+    gmap2: {
+      markers: makeFakerMarkers(),
+    },
+  }}
+  >
+    <GenerateMarkers mapId="gmap2" />
+    <Map
+      mapId="gmap2"
+      className="map"
+    />
+  </GmapProvider>, e2,
 );

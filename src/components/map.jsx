@@ -21,50 +21,53 @@ const mapWillUpdate = (prevProps, nextProps) => {
   );
 };
 
-/**
- * This is a static cache of the marker IDs
- * that are present on the map. We use
- * this list to determine which markers
- * to remove as a side effect.
- */
-const markerStaticCache = {};
-
-/**
- * Perform a difference check on the set
- * of ids. Turn off any missing markers
- * and return the new set to be
- * used.
- * @param map
- * @param visibleIds
- */
-const handleMarkersSideEffect = (map, visibleIds) => {
-  const markersToHide = arrayDiff(Object.keys(markerStaticCache), visibleIds);
-  markersToHide
-  // For the marker Ids that are missing, we setMap to null, otherwise noop
-    .forEach(id => (markerStaticCache[id] ? markerStaticCache[id].setMap(null) : noop));
-};
-
-
-/**
- * Fit bounds on the map object based on the markers.
- * @param map
- * @param markers
- */
-const fitBoundsSideEffect = (map, markers) => {
-  if (markers.length) {
-    const bounds = new window.google.maps.LatLngBounds();
-    markers.forEach(m => (m.getMap() ? bounds.extend(m.getPosition()) : noop));
-    window.google.maps.event.trigger(map, 'resize');
-    map.fitBounds(bounds);
-  }
-};
-
 const Map = ({
-  options, className, apiKey, clusterOptions,
+  options, className, clusterOptions, mapId,
 }) => {
   const mapRef = { ref: useRef(), className };
   const [gmapState, gmapDispatch] = useGmap();
-  const { map, markers, cluster } = gmapState;
+  const mapInternalState = gmapState[mapId] || {};
+
+  const {
+    map, markers, cluster,
+  } = mapInternalState;
+
+  /**
+   * This is a static cache of the marker IDs
+   * that are present on the map. We use
+   * this list to determine which markers
+   * to remove as a side effect.
+   */
+  const markerStaticCache = {};
+
+  /**
+   * Perform a difference check on the set
+   * of ids. Turn off any missing markers
+   * and return the new set to be
+   * used.
+   * @param map
+   * @param visibleIds
+   */
+  const handleMarkersSideEffect = (visibleIds) => {
+    const markersToHide = arrayDiff(Object.keys(markerStaticCache), visibleIds);
+    markersToHide
+    // For the marker Ids that are missing, we setMap to null, otherwise noop
+      .forEach(id => (markerStaticCache[id] ? markerStaticCache[id].setMap(null) : noop));
+  };
+
+  /**
+   * Fit bounds on the map object based on the markers.
+   * @param map
+   * @param markers
+   */
+  const fitBoundsSideEffect = (newMarkers) => {
+    if (newMarkers.length) {
+      const bounds = new window.google.maps.LatLngBounds();
+      newMarkers.forEach(m => (m.getMap() ? bounds.extend(m.getPosition()) : noop));
+      window.google.maps.event.trigger(map, 'resize');
+      map.fitBounds(bounds);
+    }
+  };
 
   /**
    * useEffect callback.
@@ -72,11 +75,12 @@ const Map = ({
    * This should only be invoked on the
    * first load of the component.
    */
-  const onMapsAPILoad = () => {
+  const makeMap = () => {
     const mapObj = new window.google.maps.Map(mapRef.ref.current, options);
     gmapDispatch({
       type: 'SET_MAP',
       value: mapObj,
+      id: mapId,
     });
   };
 
@@ -109,27 +113,20 @@ const Map = ({
       gmapDispatch({
         type: 'SET_CLUSTER',
         value: new MarkerClusterer(map, visibleMapMarkers, clusterOptions),
+        id: mapId,
       });
     }
-    handleMarkersSideEffect(map, visibleMapIds);
-    fitBoundsSideEffect(map, visibleMapMarkers);
+    handleMarkersSideEffect(visibleMapIds);
+    fitBoundsSideEffect(visibleMapMarkers);
   };
 
   useEffect(() => {
-    if (!window.google || !window.google.maps) {
-      const script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.src = `https://maps.google.com/maps/api/js?key=${apiKey}`;
-      const headScript = document.getElementsByTagName('script')[0];
-      headScript.parentNode.insertBefore(script, headScript);
-      script.addEventListener('load', onMapsAPILoad);
-      return () => script.removeEventListener('load', onMapsAPILoad);
-    }
     if (!map) {
-      onMapsAPILoad();
+      makeMap();
       return undefined;
     }
-    handleMapUpdates(); return undefined;
+    handleMapUpdates();
+    return undefined;
   });
 
   return (
@@ -141,7 +138,7 @@ const Map = ({
 
 Map.propTypes = {
   options: PropTypes.shape({}),
-  apiKey: PropTypes.string.isRequired,
+  mapId: PropTypes.string.isRequired,
   className: PropTypes.string.isRequired,
   clusterOptions: PropTypes.shape({}),
 };

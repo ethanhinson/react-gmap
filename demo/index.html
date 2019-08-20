@@ -7,10 +7,12 @@
   <style>
     body {
       margin: 0;
+      display:flex;
     }
 
+    #gmap2,
     #gmap {
-      width: 100%;
+      width: 50%;
       height:100vh;
       position:fixed;
       top:0;
@@ -19,14 +21,20 @@
       right:0;
     }
 
-    #gmap .map {
+    #gmap2 {
+      left: 50%;
+    }
+
+    .map {
       width: 100%;
       height:100%;
     }
   </style>
 </head>
 <body>
-<div id="gmap"></div>
+<div id="gmap" class="map"></div>
+<div id="gmap2" class="map"></div>
+<script src="https://maps.google.com/maps/api/js?key=AIzaSyBeSpqgdINaY5HWOCg-KaLkdAVbEeYhw2U"></script>
 <script src="bundle.js"></script>
 </body>
 </html>

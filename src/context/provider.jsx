@@ -16,25 +16,34 @@ const GmapStateContext = createContext(initialState);
  * @returns {*}
  */
 const reducer = (state, action) => {
-  const { type, value } = action;
+  const { type, value, id } = action;
   switch (type) {
     case 'SET_MAP':
       return {
         ...state,
-        map: value,
+        [id]: {
+          ...state[id],
+          map: value,
+        },
       };
     case 'SET_MARKERS': {
       return {
         ...state,
-        markers: [
-          ...value,
-        ],
+        [id]: {
+          ...state[id],
+          markers: [
+            ...value,
+          ],
+        },
       };
     }
     case 'SET_CLUSTER': {
       return {
         ...state,
-        cluster: value,
+        [id]: {
+          ...state[id],
+          cluster: value,
+        },
       };
     }
     default:
