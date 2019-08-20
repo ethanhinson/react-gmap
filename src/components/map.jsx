@@ -124,7 +124,12 @@ const Map = ({
       headScript.parentNode.insertBefore(script, headScript);
       script.addEventListener('load', onMapsAPILoad);
       return () => script.removeEventListener('load', onMapsAPILoad);
-    } handleMapUpdates(); return undefined;
+    }
+    if (!map) {
+      onMapsAPILoad();
+      return undefined;
+    }
+    handleMapUpdates(); return undefined;
   });
 
   return (
@@ -146,6 +151,7 @@ Map.defaultProps = {
   options: {
     center: { lat: 48, lng: 8 },
     zoom: 5,
+    maxZoom: 0,
   },
 };
 
