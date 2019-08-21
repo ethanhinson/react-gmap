@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { isEqual, omit, functions } from 'lodash';
 import MarkerClusterer from '@google/markerclustererplus';
 import { useGmap } from '../context/provider';
-import { arrayDiff, noop, makeMarker } from '../lib';
+import { noop, makeMarker } from '../lib';
 
 /**
  * Provide a helper function for determining if the props
@@ -21,6 +21,14 @@ const mapWillUpdate = (prevProps, nextProps) => {
   );
 };
 
+/**
+ * This is a static cache of the marker IDs
+ * that are present on the map. We use
+ * this list to determine which markers
+ * to remove as a side effect.
+ */
+const markerStaticCache = {};
+
 const Map = ({
   options, className, clusterOptions, mapId,
 }) => {
@@ -33,14 +41,6 @@ const Map = ({
   } = mapInternalState;
 
   /**
-   * This is a static cache of the marker IDs
-   * that are present on the map. We use
-   * this list to determine which markers
-   * to remove as a side effect.
-   */
-  const markerStaticCache = {};
-
-  /**
    * Perform a difference check on the set
    * of ids. Turn off any missing markers
    * and return the new set to be
@@ -48,10 +48,14 @@ const Map = ({
    * @param visibleIds
    */
   const handleMarkersSideEffect = (visibleIds) => {
-    const markersToHide = arrayDiff(Object.keys(markerStaticCache), visibleIds);
-    markersToHide
-    // For the marker Ids that are missing, we setMap to null, otherwise noop
-      .forEach(id => (markerStaticCache[id] ? markerStaticCache[id].setMap(null) : noop));
+    Object.keys(markerStaticCache[mapId])
+      .forEach((id) => {
+        if (visibleIds.indexOf(id) === -1) {
+          markerStaticCache[mapId][id].setMap(null);
+        } else {
+          noop();
+        }
+      });
   };
 
   /**
@@ -65,21 +69,6 @@ const Map = ({
       window.google.maps.event.trigger(map, 'resize');
       map.fitBounds(bounds);
     }
-  };
-
-  /**
-   * useEffect callback.
-   *
-   * This should only be invoked on the
-   * first load of the component.
-   */
-  const makeMap = () => {
-    const mapObj = new window.google.maps.Map(mapRef.ref.current, options);
-    gmapDispatch({
-      type: 'SET_MAP',
-      value: mapObj,
-      id: mapId,
-    });
   };
 
   /**
@@ -99,13 +88,16 @@ const Map = ({
   const handleMapUpdates = () => {
     const visibleMapIds = [];
     const visibleMapMarkers = [];
+    if (!markerStaticCache[mapId]) {
+      markerStaticCache[mapId] = {};
+    }
     markers.forEach((m) => {
       const { id } = m;
       visibleMapIds.push(id);
-      if (!markerStaticCache[id]) {
-        markerStaticCache[id] = makeMarker(map, m);
+      if (!markerStaticCache[mapId][id]) {
+        markerStaticCache[mapId][id] = makeMarker(map, m);
       }
-      visibleMapMarkers.push(markerStaticCache[id]);
+      visibleMapMarkers.push(markerStaticCache[mapId][id]);
     });
     if (clusterOptions && !cluster) {
       gmapDispatch({
@@ -118,13 +110,28 @@ const Map = ({
     fitBoundsSideEffect(visibleMapMarkers);
   };
 
+  // Runs on mount/unmount
   useEffect(() => {
-    if (!map) {
-      makeMap();
-      return undefined;
+    const mapObj = new window.google.maps.Map(mapRef.ref.current, options);
+    gmapDispatch({
+      type: 'SET_MAP',
+      value: mapObj,
+      id: mapId,
+    });
+    return () => {
+      gmapDispatch({
+        type: 'SET_MAP',
+        value: null,
+        id: mapId,
+      });
+    };
+  }, []);
+
+  // Runs on every update
+  useEffect(() => {
+    if (map) {
+      handleMapUpdates();
     }
-    handleMapUpdates();
-    return undefined;
   });
 
   return (
