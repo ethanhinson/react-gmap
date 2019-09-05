@@ -43,7 +43,7 @@ ReactDOM.render(
     <GenerateMarkers mapId="gmap1" />
     <Map
       clusterOptions={{
-        gridSize: 25,
+        gridSize: 100,
         maxZoom: 17,
       }}
       mapId="gmap1"
