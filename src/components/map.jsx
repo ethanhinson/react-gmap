@@ -66,7 +66,6 @@ const Map = ({
     if (newMarkers.length) {
       const bounds = new window.google.maps.LatLngBounds();
       newMarkers.forEach(m => (m.getMap() ? bounds.extend(m.getPosition()) : noop));
-      window.google.maps.event.trigger(map, 'resize');
       map.fitBounds(bounds);
     }
   };
@@ -99,6 +98,8 @@ const Map = ({
       }
       visibleMapMarkers.push(markerStaticCache[mapId][id]);
     });
+    handleMarkersSideEffect(visibleMapIds);
+    fitBoundsSideEffect(visibleMapMarkers);
     if (clusterOptions && !cluster) {
       gmapDispatch({
         type: 'SET_CLUSTER',
@@ -106,8 +107,12 @@ const Map = ({
         id: mapId,
       });
     }
-    handleMarkersSideEffect(visibleMapIds);
-    fitBoundsSideEffect(visibleMapMarkers);
+    if (cluster) {
+      cluster.clearMarkers();
+      cluster.addMarkers(visibleMapMarkers);
+    }
+
+    window.google.maps.event.trigger(map, 'resize');
   };
 
   // Runs on mount/unmount
